@@ -1,0 +1,29 @@
+name: Deploy Serpapi
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            echo "Deploying to ${{ secrets.SSH_HOST }}"
+            echo "User: ${{ secrets.SSH_USER }}"
+
+            cd /opt/infra/projects/serpapi_vuelos
+            git pull origin main
