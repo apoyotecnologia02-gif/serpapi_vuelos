@@ -1,0 +1,10 @@
+client_secrets.json
+token.json
+venv
+.venv/
+__pycache__/
+*.db
+.env
+polling/
+*.log
+sesion.json
