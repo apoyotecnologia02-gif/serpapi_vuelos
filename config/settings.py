@@ -72,10 +72,6 @@ DESTINOS = [
     {"name": "Santa Marta",   "code": "SMR", "origin": "MDE", "tipo": "NACIONAL",      "dias": TODOS, "noches": 2},
     {"name": "San Andres",    "code": "ADZ", "origin": "MDE", "tipo": "NACIONAL",      "dias": TODOS, "noches": 3},
     {"name": "Punta Cana",    "code": "PUJ", "origin": "MDE", "tipo": "INTERNACIONAL", "dias": TODOS, "noches": 3},
-    # OJO con "aerolineas": include_airlines EXCLUYE todo lo demas, no "prioriza".
-    # Con P5 (Wingo/Copa Colombia) MDE->PTY devolvia CERO vuelos que cumplieran
-    # los horarios, y el destino quedaba vacio. Descomentar solo si se confirma
-    # que Wingo cubre la ruta con los horarios de aVioa.
     {"name": "Panama",        "code": "PTY", "origin": "MDE", "tipo": "INTERNACIONAL", "dias": TODOS, "noches": 3},
     #  "aerolineas": "P5"},
 

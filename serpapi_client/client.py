@@ -2,8 +2,7 @@
 """
 import time
 from collections import Counter
-
-import serpapi
+from serpapi.core import Client
 
 
 class CuotaAgotada(Exception):
@@ -42,7 +41,7 @@ class Cliente:
         self.log = log
         self.gastadas = 0
         self.desglose = Counter()
-        self.cliente = serpapi.Client(api_key=api_key, timeout=timeout)
+        self.cliente = Client(api_key=api_key, timeout=timeout)
 
     def buscar(self, params, tipo="search", intentos=3):
         """

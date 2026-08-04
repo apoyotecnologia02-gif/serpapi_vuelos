@@ -61,6 +61,7 @@ def params_busqueda(destino, origen, ida, regreso, moneda="COP", reglas=None):
         "outbound_times": out_t,
         "return_times": ret_t,
         "deep_search": True,
+        "show_hidden": True,
         # include_airlines: restringe a esas aerolineas (ej. P5 = Wingo/Copa Colombia)
         "include_airlines": destino.get("aerolineas"),
     }
