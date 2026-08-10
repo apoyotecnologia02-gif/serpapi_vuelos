@@ -58,8 +58,8 @@ def params_busqueda(destino, origen, ida, regreso, moneda="COP", reglas=None):
         "hl": "es",
         "sort_by": 2,                 # por precio (ya no ordenamos a mano)
         "stops": construir_stops(destino),
-        "outbound_times": out_t,
-        "return_times": ret_t,
+        # "outbound_times": out_t,
+        # "return_times": ret_t,
         "deep_search": True,
         "show_hidden": True,
         # include_airlines: restringe a esas aerolineas (ej. P5 = Wingo/Copa Colombia)
