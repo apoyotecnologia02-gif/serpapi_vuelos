@@ -72,7 +72,7 @@ DESTINOS = [
     {"name": "Santa Marta",   "code": "SMR", "origin": "MDE", "tipo": "NACIONAL",      "dias": TODOS, "noches": 2},
     {"name": "San Andres",    "code": "ADZ", "origin": "MDE", "tipo": "NACIONAL",      "dias": TODOS, "noches": 3},
     {"name": "Punta Cana",    "code": "PUJ", "origin": "MDE", "tipo": "INTERNACIONAL", "dias": TODOS, "noches": 3},
-    {"name": "Panama",        "code": "PTY", "origin": "MDE", "tipo": "INTERNACIONAL", "dias": TODOS, "noches": 3},
+    {"name": "Panama",        "code": "BLB", "origin": "MDE", "code_explorer": "PTY", "tipo": "INTERNACIONAL", "dias": TODOS, "noches": 3, "estrategia": "deals_directo"},
     #  "aerolineas": "P5"},
 
     # ── 2 VECES POR SEMANA ──

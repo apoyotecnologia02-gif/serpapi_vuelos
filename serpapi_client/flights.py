@@ -32,7 +32,7 @@ def explorar_mes(cli, destino, origen, mes, moneda="COP"):
     params = {
         "engine": "google_travel_explore",
         "departure_id": origen,
-        "arrival_id": destino["code"],
+        "arrival_id": destino.get("code_explorer", destino["code"]),
         "type": 1,
         "month": mes,                                   # 1-12 (solo proximos 6 meses)
         "travel_duration": _duracion_explore(destino.get("noches", 3)),

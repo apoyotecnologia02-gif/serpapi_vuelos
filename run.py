@@ -8,13 +8,14 @@ Flujo por destino:
   4. Sheets (lo nuevo arriba, gangas en verde) + SQLite (historial)
 """
 import time
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 
 from config.settings import (SERPAPI_KEY, MONEDA, REGLAS, TOPE_CORRIDA, PAUSA_SEG,
                              MESES_EXPLORE, CONFIRMAR_TOP, SOLO_GANGAS, TIMEOUT_SEG,
                              TTL_HORAS, destinos_de_hoy,
                              meses_a_explorar, IATAS)
+from pipeline.filtros import construir_stops
 from serpapi_client.client import (Cliente, CuotaAgotada, ErrorSerp,
                                    SinResultados)
 from serpapi_client.flights import (explorar_mes, fechas_de_explore, buscar_paquete,
@@ -24,6 +25,48 @@ from pipeline.seleccion import (rango_tipico, veredicto, pct_vs_piso, es_ganga,
 from outputs import sheets
 from outputs.db import abrir, reciente, guardar
 
+
+def _candidatas_deals(cli, destino, origen, dias_adelante=180):
+    noches = destino.get("noches", 3)
+    hoy = date.today()
+    rango = f"{hoy.isoformat()},{(hoy + timedelta(days=dias_adelante)).isoformat()}"
+
+    params = {
+        "engine": "google_flights_deals",
+        "departure_id": origen,
+        "arrival_id": destino["code"],
+        "outbound_date": rango,
+        "duration": noches,
+        "type": 1,
+        "stops": construir_stops(destino),
+        "currency": MONEDA,
+        "gl": "co",
+        "hl": "es"
+    }
+
+    try:
+        datos = cli.buscar({k: v for k, v in params.items() if v is not None}, tipo="deals")
+    except SinResultados:
+        return []
+    except ErrorSerp as e:
+        print(f"  google_flights_deals fallo ({e}); sigo")
+        return []
+
+    vistos, salida = set(), []
+    for d in (datos.get("deals") or []):
+        ida = d.get("outbound_date")
+        precio = d.get("price")
+        if not ida or not precio:
+            continue
+        try:
+            regreso = (date.fromisoformat(ida) + timedelta(days=noches)).isoformat()
+        except ValueError:
+            continue
+
+        vistos.add((ida, regreso))
+        salida.append({"ida": ida, "regreso": regreso, "precio_est": precio})
+    salida.sort(key=lambda x: x["precio_est"])
+    return salida[:CONFIRMAR_TOP]
 
 def _candidatas(cli, destino, origen, meses):
     """
@@ -118,6 +161,7 @@ def main():
     con = abrir()
     meses = meses_a_explorar()
     del_dia = destinos_de_hoy()
+    # del_dia = [d for d in destinos_de_hoy() if d["code"] == "BLB"]
     print(f"Hoy: {len(del_dia)} destinos | explorando meses {meses} | tope {TOPE_CORRIDA} req")
 
     n_ofertas = n_gangas = n_destinos = 0
@@ -125,7 +169,10 @@ def main():
         origen, code = destino["origin"], destino["code"]
         print(f"\n==== {origen} -> {code} ({destino['name']}) ====")
         try:
-            cands = _candidatas(cli, destino, origen, meses)
+            if destino.get("estrategia") == "deals_directo":
+                cands = _candidatas_deals(cli, destino, origen)
+            else:
+                cands = _candidatas(cli, destino, origen, meses)
             if not cands:
                 print("  explore no devolvio fechas")
                 continue
