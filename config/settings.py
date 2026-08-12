@@ -108,7 +108,7 @@ DESTINOS = [
 
 IATAS = {
     "CTG": "Cartagena", "SMR": "Santa Marta", "ADZ": "San Andres", "PUJ": "Punta Cana",
-    "PTY": "Panama", "CUN": "Cancun", "CUR": "Curazao", "SDQ": "Santo Domingo",
+    "PTY": "Panama", "BLB": "Panama", "CUN": "Cancun", "CUR": "Curazao", "SDQ": "Santo Domingo",
     "RCH": "Guajira", "GIG": "Rio de Janeiro", "LET": "Amazonas", "MBJ": "Jamaica",
     "EZE": "Buenos Aires", "AUA": "Aruba", "LIM": "Lima", "MCO": "Orlando",
     "SJD": "Cabos", "SCL": "Santiago de Chile", "MEX": "Ciudad de Mexico",
