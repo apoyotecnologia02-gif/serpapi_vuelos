@@ -1,0 +1,19 @@
+services:
+  vuelos-api:
+    build: .
+    container_name: vuelos-api
+    restart: unless-stopped
+    networks:
+      - infra_network
+    volumes:
+      - /opt/infra/projects/vuelos-serpapi/serpapi_deals.db:/app/vuelos.db:ro
+    env_file:
+      - .env
+    environment:
+      - DB=/app/vuelos.db
+    ports:
+      -"8001:8001"
+
+networks:
+  infra_network:
+    external: true
