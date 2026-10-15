@@ -6,7 +6,7 @@ services:
     networks:
       - infra_network
     volumes:
-      - /opt/infra/projects/vuelos-serpapi/serpapi_deals.db:/app/vuelos.db:ro
+      - /opt/infra/projects/serpapi_vuelos/vuelos.db:/app/vuelos.db:ro
     env_file:
       - .env
     environment:
