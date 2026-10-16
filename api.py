@@ -20,21 +20,26 @@ def get_db():
 
 @app.get("/ofertas")
 def ofertas(
-    solo_gangas: bool = True,
-    limit: int = Query(20, le=50),
+    solo_gangas: bool = False,
+    limit: int = Query(20, le=100),
     origen: str | None = None,
     destino: str | None = None,
-    horas: int = 48,           # solo las de las últimas X horas
+    aerolinea: str | None = None,
+    horas: int | None = None,
+    precio_min: float | None = None,
+    precio_max: float | None = None,
+    max_escalas: int | None = None,
+    fecha_ida_desde: str | None = None,
+    fecha_ida_hasta: str | None = None
 ):
     con = get_db()
-    corte = (datetime.now(timezone.utc) - timedelta(hours=horas)).isoformat()
+    sql = "SELECT * FROM ofertas WHERE 1=1"
+    params: list = []
 
-    sql = """
-        SELECT * FROM ofertas
-        WHERE visto_en > ?
-    """
-
-    params = [corte]
+    if horas is not None:
+        corte = (datetime.now(timezone.utc) - timedelta(hours=horas)).isoformat()
+        sql += " AND visto_en > ?"
+        params.append(corte)
 
     if solo_gangas:
         sql += " AND ganga = 1"
@@ -44,8 +49,27 @@ def ofertas(
     if destino:
         sql += " AND destino = ?"
         params.append(destino.upper())
+    if aerolinea:
+        sql += " AND (LOWER(aerolinea_ida) LIKE ? OR LOWER(aerolinea_regreso) LIKE ?)"
+        like = f"%{aerolinea.lower()}%"
+        params.extend([like, like])
+    if precio_min is not None:
+        sql += " AND precio >= ?"
+        params.append(precio_min)
+    if precio_max is not None:
+        sql += " AND precio <= ?"
+        params.append(precio_max)
+    if max_escalas is not None:
+        sql += " AND (escalas_ida IS NULL OR escalas_ida <= ?) AND (escalas_regreso IS NULL OR escalas_regreso <= ?)"
+        params.extend([max_escalas, max_escalas])
+    if fecha_ida_desde:
+        sql += " AND ida >= ?"
+        params.append(fecha_ida_desde)
+    if fecha_ida_hasta:
+        sql += " AND ida <= ?"
+        params.append(fecha_ida_hasta)
 
-    sql += " ORDER BY precio ASC LIMIT ?"
+    sql += " ORDER BY visto_en DESC, precio ASC LIMIT ?"
     params.append(limit)
 
     rows = con.execute(sql, params).fetchall()
