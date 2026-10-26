@@ -12,9 +12,12 @@ CREATE TABLE IF NOT EXISTS ofertas (
   ida TEXT NOT NULL, regreso TEXT NOT NULL, noches INTEGER,
   precio REAL, moneda TEXT,
   nivel TEXT, piso REAL, techo REAL, pct_vs_piso REAL, ganga INTEGER,
-  vendedor TEXT, precio_vendedor REAL,
-  aerolinea_ida TEXT, aerolinea_regreso TEXT,
-  escalas_ida INTEGER, escalas_regreso INTEGER,
+  veredicto TEXT,
+  vendedor TEXT, precio_vendedor REAL, equipaje TEXT, separate_tickets INTEGER,
+  aerolinea_ida TEXT, vuelo_ida TEXT, salida_ida TEXT, llegada_ida TEXT,
+  escalas_ida INTEGER, duracion_ida TEXT,
+  aerolinea_regreso TEXT, vuelo_regreso TEXT, salida_regreso TEXT, llegada_regreso TEXT,
+  escalas_regreso INTEGER, duracion_regreso TEXT,
   link TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_ruta ON ofertas(origen, destino, ida, regreso);
@@ -39,15 +42,24 @@ def reciente(con, origen, destino, ida, regreso, ttl_horas):
 def guardar(con, o):
     con.execute(
         "INSERT INTO ofertas (visto_en,origen,destino,ida,regreso,noches,precio,moneda,"
-        "nivel,piso,techo,pct_vs_piso,ganga,vendedor,precio_vendedor,aerolinea_ida,"
-        "aerolinea_regreso,escalas_ida,escalas_regreso,link) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "nivel,piso,techo,pct_vs_piso,ganga,veredicto,"
+        "vendedor,precio_vendedor,equipaje,separate_tickets,"
+        "aerolinea_ida,vuelo_ida,salida_ida,llegada_ida,escalas_ida,duracion_ida,"
+        "aerolinea_regreso,vuelo_regreso,salida_regreso,llegada_regreso,"
+        "escalas_regreso,duracion_regreso,link) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (datetime.now(timezone.utc).isoformat(timespec="seconds"),
          o["origen"], o["destino"], o["ida"], o["regreso"], o.get("noches"),
          o.get("precio"), o.get("moneda"), o.get("nivel"),
          (o.get("rango") or [None, None])[0], (o.get("rango") or [None, None])[1],
-         o.get("pct_vs_piso"), 1 if o.get("ganga") else 0,
+         o.get("pct_vs_piso"), 1 if o.get("ganga") else 0, o.get("veredicto"),
          o.get("vendedor"), o.get("precio_vendedor"),
-         o.get("aerolinea_ida"), o.get("aerolinea_regreso"),
-         o.get("escalas_ida"), o.get("escalas_regreso"), o.get("link")))
+         o.get("equipaje"), 1 if o.get("separate_tickets") else 0,
+         o.get("aerolinea_ida"), o.get("vuelo_ida"),
+         o.get("salida_ida"), o.get("llegada_ida"),
+         o.get("escalas_ida"), o.get("duracion_ida"),
+         o.get("aerolinea_regreso"), o.get("vuelo_regreso"),
+         o.get("salida_regreso"), o.get("llegada_regreso"),
+         o.get("escalas_regreso"), o.get("duracion_regreso"),
+         o.get("link")))
     con.commit()
