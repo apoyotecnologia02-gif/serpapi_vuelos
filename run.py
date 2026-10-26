@@ -22,6 +22,7 @@ from serpapi_client.flights import (explorar_mes, fechas_de_explore, buscar_paqu
                                     traer_regreso, traer_booking, traer_insights)
 from pipeline.seleccion import (rango_tipico, veredicto, pct_vs_piso, es_ganga,
                                 elegir_vendedor, detalle_tramo)
+from pipeline.horarios import seleccionar_vuelo, desvio_horario
 from outputs import sheets
 from outputs.db import abrir, reciente, guardar
 
@@ -102,7 +103,14 @@ def _procesar(cli, con, destino, ida, regreso):
     vuelos = (datos.get("best_flights") or []) + (datos.get("other_flights") or [])
     if not vuelos:
         return None
-    mejor = min(vuelos, key=lambda v: v.get("price") or 1e12)
+    nacional = str(destino.get("tipo", "")).upper() == "NACIONAL"
+    rango = (None, None)
+    if nacional:
+        # Reutiliza la consulta de referencia existente, antes de seleccionar.
+        rango = rango_tipico(traer_insights(cli, destino, origen, ida, regreso, MONEDA))
+    mejor = seleccionar_vuelo(vuelos, destino, "ida", ida, rango)
+    if mejor is None:
+        return None
     precio = mejor.get("price")
     if not precio:
         return None
@@ -126,7 +134,11 @@ def _procesar(cli, con, destino, ida, regreso):
     vuelta = ((reg_datos.get("best_flights") or []) + (reg_datos.get("other_flights") or []))
     if not vuelta:
         return None
-    v_mejor = min(vuelta, key=lambda v: v.get("price") or 1e12)
+    v_mejor = seleccionar_vuelo(vuelta, destino, "regreso", regreso, rango)
+    if v_mejor is None:
+        return None
+    precio = v_mejor["price"]
+    o["precio"] = precio
     dv = detalle_tramo(v_mejor)
     o.update({"aerolinea_regreso": dv.get("aerolinea"), "vuelo_regreso": dv.get("numero_vuelo"),
               "salida_regreso": dv.get("salida"), "llegada_regreso": dv.get("llegada"),
@@ -143,9 +155,17 @@ def _procesar(cli, con, destino, ida, regreso):
               "equipaje": vend.get("equipaje", ""),
               "separate_tickets": vend.get("separate_tickets")})
 
-    # ── referencia del mercado: request PELADA (los filtros matan price_insights) ──
-    # va al final a proposito: solo se gasta en paquetes que ya pasaron todo.
-    rango = rango_tipico(traer_insights(cli, destino, origen, ida, regreso, MONEDA))
+    # Clasificar el total confirmado por el vendedor directo seleccionado.
+    precio = vend["precio"]
+    o["precio"] = precio
+    if not nacional:
+        rango = rango_tipico(traer_insights(cli, destino, origen, ida, regreso, MONEDA))
+    if nacional:
+        desvios = [desvio_horario(mejor, "ida", ida),
+                   desvio_horario(v_mejor, "regreso", regreso)]
+        estado = ("Pendiente de confirmar" if any(d is None for d in desvios)
+                  else "Cumple" if sum(desvios) == 0 else "Aproximado")
+        print(f"  [horario] {estado} | llegada ida: {di.get('llegada')} | salida regreso: {dv.get('salida')}")
     o.update({"rango": list(rango) if rango[0] else None,
               "veredicto": veredicto(precio, rango),
               "nivel": veredicto(precio, rango),
